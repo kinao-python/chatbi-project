@@ -1,0 +1,16 @@
+# 核心Web框架
+streamlit
+
+#数据处理与分析
+pandas
+numpy
+
+# AI大模型调用
+openai
+
+#环境变量配置（读取.env）
+python-dotenv
+
+#数据可视化
+matplotlib
+seaborn

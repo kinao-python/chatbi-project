@@ -1,22 +1,46 @@
-*.pyc _pycache_/ .env
-# Python 虚拟环境
+# --- 敏感信息 ---
+.env
+.streamlit/secrets.toml
+
+# --- Python 缓存与虚拟环境 ---
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# --- 虚拟环境目录（根据你的实际情况） ---
 chatbi_env/
 venv/
 
-# 敏感信息
-.env
-
-# 数据库文件（太大且可能包含敏感数据，不上传）
+# --- 数据库文件 ---
 *.db
 *.sqlite
+*.sqlite3
 
-# 日志文件
+# --- 日志与输出文件 ---
 *.log
+chatbi.log
 
-# 缓存和临时文件
-__pycache__/
-*.pyc
+# --- 图表输出目录 ---
+charts/
+
+# --- 系统临时文件 ---
 .DS_Store
-
-# 图表输出（可选）
-*.png
+*.swp
+*.swo
