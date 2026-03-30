@@ -42,7 +42,7 @@ source chatbi_env/bin/activate
 pip install -r requirements.txt
 
 3.配置 API Key
-bash
+```bash
 cp .env.example .env
 # 编辑 .env 文件，填入你的智谱 API Key
 nano .env
@@ -52,31 +52,29 @@ nano .env
 确保 superstore.db 文件在项目根目录。
 
 5.运行应用
-bash
+```bash
 streamlit run app.py --server.port 8501 --server.address 0.0.0.0
 访问 http://localhost:8501 或 http://你的服务器IP:8501。
 
 Docker 部署
-bash
+```bash
 # 构建镜像
 docker build -t chatbi .
 
 # 运行容器（挂载数据库文件）
 docker run -d -p 8501:8501 -v $(pwd)/superstore.db:/app/superstore.db --name chatbi chatbi
+
 systemd 服务（Linux）
-将 chatbi.service 复制到 /etc/systemd/system/
-
-重新加载 systemd：sudo systemctl daemon-reload
-
-启动服务并设置开机自启：
-
-bash
+1.将 chatbi.service 复制到 /etc/systemd/system/
+2.重新加载 systemd：sudo systemctl daemon-reload
+3.启动服务并设置开机自启：
+```bash
 sudo systemctl enable chatbi
 sudo systemctl start chatbi
-查看状态：sudo systemctl status chatbi
+4.查看状态：sudo systemctl status chatbi
 
 项目结构
-text
+```text
 chatbi-project/
 ├── app.py                  # Streamlit 前端界面
 ├── chatbi_core.py          # 核心逻辑（LLM 调用、SQL 执行、图表生成）
@@ -89,29 +87,24 @@ chatbi-project/
 ├── .gitignore              # Git 忽略文件
 ├── README.md               # 项目说明
 └── superstore.db           # SQLite 数据库（需自行生成）
+
 常见问题
 1. API 调用失败，提示余额不足或认证错误
 检查 .env 中的 API Key 是否正确。
-
 确认智谱账户有足够余额（免费额度通常够用）。
 
 2. 生成的 SQL 执行失败或返回空结果
 查看日志文件 chatbi.log 中的错误信息。
-
 检查 schema_info.txt 是否与实际数据库字段一致。
-
 尝试修改 prompt_template.txt，增加更明确的字段说明。
 
 3. 图表未生成
 确认问题中包含“画图”、“柱状图”、“折线图”、“饼图”等关键词。
-
 检查查询结果数据格式是否适合绘制图表（如柱状图需要两列，一列类别一列数值）。
-
 查看 charts/ 目录是否有图片生成。
 
 4. 服务无法访问（外部）
 确保服务器防火墙开放了 8501 端口。
-
 如果在云服务器上，检查安全组规则。
 
 贡献
@@ -122,5 +115,4 @@ MIT License
 
 联系方式
 作者：kinao-python
-
 GitHub：https://github.com/kinao-python/chatbi-project
