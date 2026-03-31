@@ -1,0 +1,14 @@
+[Unit]
+Description=ChatBI Streamlit App
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/chatbi_project
+ExecStart=/root/chatbi_project/chatbi_env/bin/streamlit run app.py --server.port 8501 --server.address 0.0.0.0
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
