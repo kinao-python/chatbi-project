@@ -1,36 +1,3 @@
-好的，我们一步步来，像搭积木一样简单。你现在已经在服务器的项目目录 `/root/chatbi_project` 中，并且之前已经成功推送过代码。下面我带你完成 GitHub 页面的优化。
-
----
-
-## 第一步：进入项目目录
-```bash
-cd /root/chatbi_project
-```
-确保你在这个目录下。
-
----
-
-## 第二步：备份现有文件（以防万一）
-```bash
-cp README.md README.md.bak
-cp .env.example .env.example.bak
-```
-如果你之后改错了，可以用备份恢复。
-
----
-
-## 第三步：更新 README.md
-
-### 1. 用 nano 编辑器打开 README.md
-```bash
-nano README.md
-```
-
-### 2. 删除原有全部内容，然后粘贴我下面给你的新内容
-**如何粘贴**：在 nano 中，先按 `Ctrl+A` 全选，然后按 `Delete` 删除所有内容。接着右键粘贴（如果 SSH 客户端支持）或按 `Ctrl+Shift+V` 粘贴。  
-**新内容**（直接复制下面整个代码块，包括开头的 ``` 和结尾的 ```）：
-
-```markdown
 # ChatBI - 对话式数据分析平台
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](http://159.75.111.169:8501)  
