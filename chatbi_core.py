@@ -3,9 +3,9 @@ import re
 import copy
 import time
 import logging
-import sqlite3
 from typing import Dict, Optional, Any
 from common.llm_client import LLMClient
+from common.sql_executor import SQLExecutor
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -31,11 +31,16 @@ with open('prompt_template.txt', 'r', encoding='utf-8') as f:
     PROMPT_TEMPLATE = f.read()
 
 SYSTEM_PROMPT = PROMPT_TEMPLATE.format(schema=SCHEMA)
+# 获取当前文件所在目录，构建数据库绝对路径
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, 'superstore.db')
+executor = SQLExecutor(db_path=DB_PATH, readonly=True)
+
 llm_client = LLMClient() # 初始化llm_client
 CACHE = {}
 CACHE_TTL = 3600  # 缓存有效期1小时
 MAX_TITLE_LENGTH = 50  # 图表标题最大长度
-DB_PATH = 'superstore.db'  # 数据库路径
+DB_PATH = '/root/chatbi_project/superstore.db'  # 数据库路径(绝对路径)
 DANGER_SQL_KEYWORDS = ['DROP', 'ALTER', 'DELETE', 'INSERT', 'UPDATE', 'CREATE']  # 危险SQL关键词
 
 def auto_plot(df: pd.DataFrame, question: str, output_dir: str = 'charts', filename: Optional[str] = None) -> Optional[str]:
@@ -156,14 +161,13 @@ def ask_question(question: str, visualize: bool = False) -> Dict[str, Any]:
         result['sql'] = sql
         logger.info(f"生成的SQL: {sql}")
 
-        # 执行SQL查询（确保连接安全关闭）
-        if not os.path.exists(DB_PATH):
-            raise FileNotFoundError(f"数据库文件不存在: {DB_PATH}")
-        with sqlite3.connect(DB_PATH) as conn:
-            conn.execute("PRAGMA query_only = 1")  # 只读模式
-            df = pd.read_sql_query(sql, conn)
-        result['data'] = df
-        logger.info(f"查询成功，返回 {len(df)} 行")
+        # 执行 SQL 查询
+        df, error = executor.execute(sql)
+        if error:
+            result['error'] = error
+        else:
+            result['data'] = df
+            logger.info(f"查询成功，返回 {len(df)} 行")
 
         # 生成可视化图表
         if visualize:
