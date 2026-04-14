@@ -5,6 +5,7 @@ import pandas as pd
 
 # 页面配置
 st.set_page_config(page_title="ChatBI - 对话式数据分析", page_icon="📊", layout="wide")
+
 # 简单密码认证（避免初始加载时直接报错）
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
@@ -41,38 +42,13 @@ def process_question(question: str, visualize: bool = True):
     with st.spinner("正在思考..."):
         result = ask_question(question, visualize=visualize)
 
-    # 3. 构建助手消息（友好化错误）
+    # 3. 构建助手消息（此时 result['error'] 已经是友好提示）
     if result['error']:
-        error_msg = result['error'].lower()
-        # 定义错误关键词与友好消息的映射
-        error_mappings = [
-            (["syntax_error", "near", "parse error", "unrecognized token", "unexpected token"],
-            "❌ 您的问题似乎不是数据查询。请尝试问一些关于销售额、利润、地区、品类等数据相关的问题。"),
-            (["no such table", "unknown table"],
-            "❌ 查询涉及的数据表不存在，请检查您的提问是否与销售数据相关。"),
-            (["no such column", "unknown column", "invalid column"],
-            "❌ 查询中引用了不存在的字段，请确认字段名称是否正确。"),
-            (["ambiguous column"],
-            "❌ 查询中的字段名有歧义，请使用更明确的表述。"),
-            (["access denied", "permission denied"],
-            "❌ 您没有执行此查询的权限，请联系管理员。"),
-            (["timeout", "too long"],
-            "❌ 查询超时，请简化您的提问或缩小数据范围。"),
-            # 如果你有专门的“生成的内容不是有效的 SQL”错误，可以单独处理
-            (["生成的内容不是有效的 sql"], result['error'])  # 保持原样
-        ]
-        friendly_error = None
-        for keywords, msg in error_mappings:
-            if any(keyword in error_msg for keyword in keywords):
-                friendly_error = msg
-                break
-        if friendly_error is None:
-            friendly_error = f"❌ 查询失败: {result['error']}"
-        assistant_content = friendly_error
+        assistant_content = result['error']   # 直接使用友好错误提示
     else:
         df = result['data']
         if df.empty:
-            assistant_content = "❌ 查询成功，但没有匹配的数据。请检查条件或换一个问法。"
+            assistant_content = "⚠️ 查询成功，但没有匹配的数据。请检查条件或换一个问法。"
         else:
             assistant_content = f"查询完成，共 {len(df)} 行"
             # 其他数据展示将在历史消息循环中根据 result 渲染

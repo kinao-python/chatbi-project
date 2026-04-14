@@ -3,10 +3,11 @@ import re
 import copy
 import time
 import logging
-from typing import Dict, Optional, Any
+from typing import Dict, Any
 from common.llm_client import LLMClient
 from common.sql_executor import SQLExecutor
 from common.visualizer import Visualizer
+from common.error_handler import classify_error
 import pandas as pd
 from dotenv import load_dotenv
 
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 # 加载环境变量
 load_dotenv()
 
-# 读取表结构和 Prompt 模板（在模块加载时读取一次）
+# 读取表结构和 Prompt 模板
 with open('schema_info.txt', 'r', encoding='utf-8') as f:
     SCHEMA = f.read()
 
@@ -30,16 +31,22 @@ with open('prompt_template.txt', 'r', encoding='utf-8') as f:
     PROMPT_TEMPLATE = f.read()
 
 SYSTEM_PROMPT = PROMPT_TEMPLATE.format(schema=SCHEMA)
+
 # 获取当前文件所在目录，构建数据库绝对路径
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'superstore.db')
+
+# 初始化模块
 executor = SQLExecutor(db_path=DB_PATH, readonly=True)
-viz = Visualizer(output_dir='charts', max_title_length=50) #初始化模块
-llm_client = LLMClient() # 初始化llm_client
+viz = Visualizer(output_dir='charts', max_title_length=50)
+llm_client = LLMClient()
+
+# 缓存
 CACHE = {}
 CACHE_TTL = 3600  # 缓存有效期1小时
-DB_PATH = '/root/chatbi_project/superstore.db'  # 数据库路径(绝对路径)
-DANGER_SQL_KEYWORDS = ['DROP', 'ALTER', 'DELETE', 'INSERT', 'UPDATE', 'CREATE']  # 危险SQL关键词
+
+# 危险SQL关键词
+DANGER_SQL_KEYWORDS = ['DROP', 'ALTER', 'DELETE', 'INSERT', 'UPDATE', 'CREATE']
 
 def ask_question(question: str, visualize: bool = False) -> Dict[str, Any]:
     """
@@ -68,12 +75,13 @@ def ask_question(question: str, visualize: bool = False) -> Dict[str, Any]:
         # 调用 LLM 生成 SQL
         sql, error = llm_client.generate_sql(SYSTEM_PROMPT, question)
         if error:
-            result['error'] = error
+            result['error'] = classify_error(error)   # 统一友好化
             return result
 
         # 安全过滤：禁止危险SQL
         if any(keyword in sql.upper() for keyword in DANGER_SQL_KEYWORDS):
-            result['error'] = "禁止执行修改/删除类SQL操作"
+            error_msg = "禁止执行修改/删除类SQL操作"
+            result['error'] = classify_error(error_msg)
             logger.warning(f"危险SQL: {sql}")
             return result
 
@@ -83,7 +91,7 @@ def ask_question(question: str, visualize: bool = False) -> Dict[str, Any]:
         # 执行 SQL 查询
         df, error = executor.execute(sql)
         if error:
-            result['error'] = error
+            result['error'] = classify_error(error)
         else:
             result['data'] = df
             logger.info(f"查询成功，返回 {len(df)} 行")
@@ -94,7 +102,7 @@ def ask_question(question: str, visualize: bool = False) -> Dict[str, Any]:
             result['chart_path'] = chart_path
 
     except Exception as e:
-        result['error'] = str(e)
+        result['error'] = classify_error(str(e))
         logger.error(f"处理失败: {e}")
 
     # 存储缓存（深拷贝避免数据污染）
