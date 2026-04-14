@@ -1,5 +1,4 @@
 import os
-import re
 import copy
 import time
 import logging
@@ -11,11 +10,16 @@ from common.error_handler import classify_error
 import pandas as pd
 from dotenv import load_dotenv
 
-# 配置日志
+# 日志配置
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOG_DIR = os.path.join(BASE_DIR, 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)          # 自动创建 logs 目录
+LOG_FILE = os.path.join(LOG_DIR, 'chatbi.log')
+
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    filename='chatbi.log',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # 添加 %(name)s
+    filename=LOG_FILE,
     filemode='a'
 )
 logger = logging.getLogger(__name__)
@@ -23,17 +27,16 @@ logger = logging.getLogger(__name__)
 # 加载环境变量
 load_dotenv()
 
-# 读取表结构和 Prompt 模板
-with open('schema_info.txt', 'r', encoding='utf-8') as f:
+# 读取 schema 和 prompt
+schema_path = os.path.join(BASE_DIR, 'schema_info.txt')
+prompt_path = os.path.join(BASE_DIR, 'prompt_template.txt')
+with open(schema_path, 'r', encoding='utf-8') as f:
     SCHEMA = f.read()
-
-with open('prompt_template.txt', 'r', encoding='utf-8') as f:
+with open(prompt_path, 'r', encoding='utf-8') as f:
     PROMPT_TEMPLATE = f.read()
-
 SYSTEM_PROMPT = PROMPT_TEMPLATE.format(schema=SCHEMA)
 
-# 获取当前文件所在目录，构建数据库绝对路径
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# 数据库路径
 DB_PATH = os.path.join(BASE_DIR, 'superstore.db')
 
 # 初始化模块
@@ -62,10 +65,26 @@ def ask_question(question: str, visualize: bool = False) -> Dict[str, Any]:
 
     # 检查缓存
     if question in CACHE:
-        cached_result, cached_time = CACHE[question]
+        cached_sql, cached_error, cached_chart_path, cached_time = CACHE[question]
         if time.time() - cached_time < CACHE_TTL:
-            logger.info(f"使用缓存结果: {question}")
-            return cached_result
+            logger.info(f"使用缓存元数据: {question}")
+            # 重新构建结果，但 data 需要重新查询
+            result = {
+                'sql': cached_sql,
+                'data': None,
+                'error': cached_error,
+                'chart_path': cached_chart_path
+            }
+            # 如果没有错误，则重新执行 SQL 获取数据
+            if not cached_error:
+                df, exec_error = executor.execute(cached_sql)
+                if exec_error:
+                    result['error'] = classify_error(exec_error)
+                else:
+                    result['data'] = df
+                    logger.info(f"缓存命中后重新查询成功，返回 {len(df)} 行")
+            # 如果缓存中已有错误，直接返回错误信息
+            return result
         else:
             del CACHE[question]
             logger.info(f"缓存已过期: {question}")
@@ -105,8 +124,9 @@ def ask_question(question: str, visualize: bool = False) -> Dict[str, Any]:
         result['error'] = classify_error(str(e))
         logger.error(f"处理失败: {e}")
 
-    # 存储缓存（深拷贝避免数据污染）
-    CACHE[question] = (copy.deepcopy(result), time.time())
+    # 只缓存轻量级信息
+    cache_entry = (result['sql'], result['error'], result['chart_path'], time.time())
+    CACHE[question] = cache_entry
 
     # 记录耗时
     elapsed = time.time() - start_time
