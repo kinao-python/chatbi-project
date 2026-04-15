@@ -114,26 +114,6 @@ docker run -d -p 8501:8501 \
 4. 查看状态：`sudo systemctl status chatbi`
 
 
-=======
-## 项目结构
-```
-chatbi-project/
-├── app.py                  # Streamlit 前端界面
-├── chatbi_core.py          # 核心逻辑（LLM 调用、SQL 执行、图表生成）
-├── schema_info.txt         # 数据库表结构描述
-├── prompt_template.txt     # LLM 提示词模板
-├── prepare_data.py         # 数据预处理脚本
-├── requirements.txt        # Python 依赖
-├── Dockerfile              # Docker 镜像构建文件
-├── .env.example            # 环境变量示例
-├── chatbi.service.example  # systemd 服务示例文件
-├── CONTRIBUTING.md         # 贡献指南
-├── LICENSE                 # MIT 许可证
-├── .gitignore              # Git 忽略文件
-├── README.md               # 项目说明
-└── superstore.db           # SQLite 数据库（需自行生成）
-```
-
 ## 效果评估
 
 基于 **20 条** 典型业务查询测试集（涵盖聚合、过滤、排序、时间函数、分组、计算列等），当前版本评估结果如下：
