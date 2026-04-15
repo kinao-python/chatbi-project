@@ -1,0 +1,22 @@
+[
+    {"question": "各个地区的总销售额是多少？", "sql": "SELECT region, SUM(sales) FROM orders GROUP BY region"},
+    {"question": "各个品类的平均利润是多少？", "sql": "SELECT category, AVG(profit) FROM orders GROUP BY category"},
+    {"question": "2023年利润最高的五个订单是哪些？", "sql": "SELECT order_id, profit FROM orders WHERE strftime('%Y', order_date) = '2023' ORDER BY profit DESC LIMIT 5"},
+    {"question": "上个月华东区销售额最高的三个子品类是什么？", "sql": "SELECT sub_category, SUM(sales) FROM orders WHERE region='East' AND strftime('%Y-%m', order_date) = strftime('%Y-%m', date('now', '-1 month')) GROUP BY sub_category ORDER BY SUM(sales) DESC LIMIT 3"},
+    {"question": "各个品类的总利润和利润率", "sql": "SELECT category, SUM(profit) AS total_profit, SUM(profit)/SUM(sales) AS profit_margin FROM orders GROUP BY category"},
+    {"question": "2022年销售额最高的前10个产品", "sql": "SELECT product_name, SUM(sales) FROM orders WHERE strftime('%Y', order_date) = '2022' GROUP BY product_name ORDER BY SUM(sales) DESC LIMIT 10"},
+    {"question": "各个地区的订单数量", "sql": "SELECT region, COUNT(*) FROM orders GROUP BY region"},
+    {"question": "科技品类中利润为负的订单数量", "sql": "SELECT COUNT(*) FROM orders WHERE category='Technology' AND profit < 0"},
+    {"question": "各个月份的总销售额（按月汇总）", "sql": "SELECT strftime('%Y-%m', order_date) AS month, SUM(sales) FROM orders GROUP BY month ORDER BY month"},
+    {"question": "哪个地区的平均折扣最高？", "sql": "SELECT region, AVG(discount) FROM orders GROUP BY region ORDER BY AVG(discount) DESC LIMIT 1"},
+    {"question": "销售额最高的客户是谁？", "sql": "SELECT customer_name, SUM(sales) FROM orders GROUP BY customer_name ORDER BY SUM(sales) DESC LIMIT 1"},
+    {"question": "2023年第一季度（1-3月）的总利润", "sql": "SELECT SUM(profit) FROM orders WHERE strftime('%Y', order_date) = '2023' AND strftime('%m', order_date) IN ('01','02','03')"},
+    {"question": "各个子品类的平均销售额", "sql": "SELECT sub_category, AVG(sales) FROM orders GROUP BY sub_category"},
+    {"question": "办公用品品类中销售额最高的三个子品类", "sql": "SELECT sub_category, SUM(sales) FROM orders WHERE category='Office Supplies' GROUP BY sub_category ORDER BY SUM(sales) DESC LIMIT 3"},
+    {"question": "2021年之后的总销售额", "sql": "SELECT SUM(sales) FROM orders WHERE order_date > '2021-12-31'"},
+    {"question": "各个地区利润最高的订单", "sql": "SELECT region, order_id, MAX(profit) FROM orders GROUP BY region"},
+    {"question": "平均客单价（总销售额/总订单数）", "sql": "SELECT SUM(sales)/COUNT(DISTINCT order_id) FROM orders"},
+    {"question": "折扣率大于0.2的订单数量", "sql": "SELECT COUNT(*) FROM orders WHERE discount > 0.2"},
+    {"question": "各个客户细分（segment）的销售额占比", "sql": "SELECT segment, SUM(sales)*1.0/(SELECT SUM(sales) FROM orders) FROM orders GROUP BY segment"},
+    {"question": "2023年各季度销售额", "sql": "SELECT CASE WHEN strftime('%m', order_date) IN ('01','02','03') THEN 'Q1' WHEN strftime('%m', order_date) IN ('04','05','06') THEN 'Q2' WHEN strftime('%m', order_date) IN ('07','08','09') THEN 'Q3' ELSE 'Q4' END AS quarter, SUM(sales) FROM orders WHERE strftime('%Y', order_date) = '2023' GROUP BY quarter ORDER BY quarter"}
+]

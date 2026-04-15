@@ -113,6 +113,39 @@ docker run -d -p 8501:8501 \
    ```
 4. 查看状态：`sudo systemctl status chatbi`
 
+
+=======
+## 项目结构
+```
+chatbi-project/
+├── app.py                  # Streamlit 前端界面
+├── chatbi_core.py          # 核心逻辑（LLM 调用、SQL 执行、图表生成）
+├── schema_info.txt         # 数据库表结构描述
+├── prompt_template.txt     # LLM 提示词模板
+├── prepare_data.py         # 数据预处理脚本
+├── requirements.txt        # Python 依赖
+├── Dockerfile              # Docker 镜像构建文件
+├── .env.example            # 环境变量示例
+├── chatbi.service.example  # systemd 服务示例文件
+├── CONTRIBUTING.md         # 贡献指南
+├── LICENSE                 # MIT 许可证
+├── .gitignore              # Git 忽略文件
+├── README.md               # 项目说明
+└── superstore.db           # SQLite 数据库（需自行生成）
+```
+
+## 效果评估
+
+基于 **20 条** 典型业务查询测试集（涵盖聚合、过滤、排序、时间函数、分组、计算列等），当前版本评估结果如下：
+
+| 指标 | 数值 |
+|------|------|
+| ✅ **可执行成功率**（SQL 能跑通且有数据） | **80%** (16/20) |
+| 平均响应时间 | 2.09 秒 |
+| SQL 精确匹配率（仅供参考） | 5% (1/20) |
+
+> **可执行成功率是核心指标**，反映模型对业务逻辑的理解是否正确。精确匹配率较低（仅5%）是因为 LLM 生成的 SQL 在别名、空格、大小写、函数写法（如 `SUM(sales)` vs `sum(sales) as total_sales`）上与标准答案存在差异，但这些差异不影响查询结果的正确性。评估脚本和测试集位于 `evaluation/` 目录，可自行复现。
+
 ## 常见问题
 
 ### 1. API 调用失败，提示余额不足或认证错误
