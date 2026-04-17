@@ -19,3 +19,5 @@
   历史：用户问“华东地区的销售额最高的三个子品类”，SQL包含 WHERE region='East'
   当前：用户问“这个地区的总利润” → 生成 SELECT SUM(profit) FROM orders WHERE region='East'
 - 如果无法确定实体，忽略历史。
+## 性能优化建议
+- 当用户问题要求“每个分组中某字段最高/最低的记录”（如每个地区利润最高的订单），请使用窗口函数 ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ... DESC) 实现，避免使用相关子查询（WHERE profit = (SELECT MAX(...) ...)），因为后者效率极低。

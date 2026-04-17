@@ -1,0 +1,15 @@
+__pycache__
+*.pyc
+.git
+.gitignore
+logs/*
+charts/*
+.env
+*.db
+*.csv
+README.md
+CONTRIBUTING.md
+LICENSE
+chatbi.service.example
+evaluation/__pycache__
+tests/__pycache__
