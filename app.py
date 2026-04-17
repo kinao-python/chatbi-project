@@ -38,11 +38,28 @@ def process_question(question: str, visualize: bool = True):
     # 1. 添加用户消息
     st.session_state.messages.append({"role": "user", "content": question})
 
-    # 2. 调用核心函数
-    with st.spinner("正在思考..."):
-        result = ask_question(question, visualize=visualize)
+    # 2. 构建历史上下文（从已有消息中提取最近的 user-assistant 对）
+    history = []
+    msgs = st.session_state.messages
+    # 遍历消息，提取成对的 user 和 assistant（assistant 需包含 result.sql）
+    i = 0
+    while i < len(msgs) - 1:
+        if msgs[i]['role'] == 'user' and msgs[i+1]['role'] == 'assistant':
+            user_q = msgs[i]['content']
+            assistant_sql = msgs[i+1].get('result', {}).get('sql', '')
+            if assistant_sql:
+                history.append({'user': user_q, 'sql': assistant_sql})
+            i += 2
+        else:
+            i += 1
+    # 只保留最近3轮
+    history = history[-3:]
 
-    # 3. 构建助手消息（此时 result['error'] 已经是友好提示）
+    # 3. 调用核心函数
+    with st.spinner("正在思考..."):
+        result = ask_question(question, visualize=visualize, history=history)
+
+    # 4. 构建助手消息（此时 result['error'] 已经是友好提示）
     if result['error']:
         assistant_content = result['error']   # 直接使用友好错误提示
     else:
@@ -53,7 +70,7 @@ def process_question(question: str, visualize: bool = True):
             assistant_content = f"查询完成，共 {len(df)} 行"
             # 其他数据展示将在历史消息循环中根据 result 渲染
 
-    # 将助手消息存入（附带完整 result，用于后续展示数据）
+    # 5.将助手消息存入（附带完整 result，用于后续展示数据）
     st.session_state.messages.append({
         "role": "assistant",
         "content": assistant_content,

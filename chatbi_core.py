@@ -51,7 +51,7 @@ CACHE_TTL = 3600  # 缓存有效期1小时
 # 危险SQL关键词
 DANGER_SQL_KEYWORDS = ['DROP', 'ALTER', 'DELETE', 'INSERT', 'UPDATE', 'CREATE']
 
-def ask_question(question: str, visualize: bool = False) -> Dict[str, Any]:
+def ask_question(question: str, visualize: bool = False, history: list = None) -> Dict[str, Any]:
     """
     输入自然语言问题，返回查询结果字典。
     """
@@ -91,8 +91,15 @@ def ask_question(question: str, visualize: bool = False) -> Dict[str, Any]:
 
     try:
         logger.info(f"处理问题: {question}")
-        # 调用 LLM 生成 SQL
-        sql, error = llm_client.generate_sql(SYSTEM_PROMPT, question)
+        # 构建带历史的系统提示
+        system_prompt_with_history = SYSTEM_PROMPT
+        if history and len(history) > 0:
+            context = "\n\n## 历史对话（仅用于理解上下文，不要重复输出历史SQL）\n"
+            for turn in history[-3:]:  # 最多3轮
+                context += f"用户问过: {turn['user']}\n我生成的SQL: {turn['sql']}\n\n"
+            system_prompt_with_history += context
+            logger.info(f"附带历史上下文，共 {len(history)} 轮")
+        sql, error = llm_client.generate_sql(system_prompt_with_history, question)
         if error:
             result['error'] = classify_error(error)   # 统一友好化
             return result
